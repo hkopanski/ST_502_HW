@@ -1,0 +1,113 @@
+---
+title: "HW4"
+author: "Halid Kopanski"
+date: "2/10/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Problem 1
+
+![](/home/hk-user/Documents/Document_Backup/ST_502/R_HW1/HW4/Q1.png)
+
+
+## Problem 2
+
+![](/home/hk-user/Documents/Document_Backup/ST_502/R_HW1/HW4/Q2.png)
+
+## Problem 3
+
+Since p = 0.15, we can approximate the distribution to be normal with a mean of n\*p and a variance of n\*p\*(1 - p). The results are comparable.
+
+```{r, warning = FALSE, message = FALSE}
+library(tidyverse)
+
+n <- 200
+p <- 0.15
+probs <- c()
+
+for (i in 0:n){
+  probs <- append(probs, choose(n, i) * p^i * (1 - p)^(n - i))
+}
+
+df_factory <- data.frame("defects" = 0:n, "probability" = probs)
+
+ggplot(data = df_factory, aes(x = defects, y = probability)) + 
+    geom_bar(stat = "identity", color = "black", fill = "#003f5c", alpha = 0.7) + 
+    xlim(0, 50)
+
+sprintf("Binomial calculation: %0.5f", 1 - sum(df_factory[0:41, "probability"]))
+sprintf("Normal Approximation: %0.5f", 1 - pnorm(40, mean = n*p, sd = (n*p*(1-p))^0.5))
+sprintf("Binomial calculation (built in): %0.5f", 1 - pbinom(40, n, p))
+
+```
+
+## Problem 4
+
+![](/home/hk-user/Documents/Document_Backup/ST_502/R_HW1/HW4/Q4.png)
+
+## Problem 5
+
+![](/home/hk-user/Documents/Document_Backup/ST_502/R_HW1/HW4/Q5.png)
+
+## Problem 6
+
+![](/home/hk-user/Documents/Document_Backup/ST_502/R_HW1/HW4/Q6.png)
+
+```{r}
+library(tidyverse)
+library(cowplot)
+
+options(repr.plot.width = 16, repr.plot.height = 12, repr.plot.res = 100)
+
+set.seed(27092021)
+
+chart_colors <- c("#003f5c", "#2f4b7c", "#665191", "#a05195",
+                  "#d45087", "#f95d6a", "#ff7c43", "#ffa600")
+
+mu <- 0
+sigma <- 1
+N <- 1000
+n <- 100 
+
+X_i <- rnorm(N, mu, sigma)
+e_i <- rnorm(n, mu + 1, sigma)
+x_samples <- sample(X_i, n)
+Y_i <- x_samples + e_i
+
+df_sample <- data.frame("Samples" = x_samples, "Error" = e_i, "Y_i" = Y_i)
+
+y_plot <-  ggplot(data = df_sample, aes(x = Y_i)) + 
+           geom_density(fill = chart_colors[1], alpha = 0.6) +
+           ggtitle(label = expression(Y[i])) + xlab("") + ylab("") + xlim(-5, 8) + ylim(0, 0.4) + 
+           geom_vline(mapping = NULL, xintercept = mu + 1, linetype = "longdash", color = "red")
+
+x_plot <-  ggplot() + 
+           geom_density(fill = chart_colors[3], alpha = 0.6, aes(x = as.data.frame(X_i)[,1])) +
+           ggtitle(label = expression(X[i])) + xlab("") + ylab("") + xlim(-5, 8) + ylim(0, 0.4) + 
+           geom_vline(mapping = NULL, xintercept = mu, linetype = "longdash", color = "red")
+
+noerror_plot <-  ggplot(data = df_sample, aes(x = x_samples)) + 
+           geom_density(fill = chart_colors[1], alpha = 0.6) +
+           ggtitle(label = expression(x[i])) + xlab("") + ylab("") + xlim(-5, 8) + ylim(0, 0.4) + 
+           geom_vline(mapping = NULL, xintercept = mu, linetype = "longdash", color = "red")
+
+plot_grid(y_plot, x_plot, noerror_plot, align = 'vh', hjust = -1, nrow = 1, ncol = 3)
+```
+
+From the plots above, it can be seen that the sample distribution without error($x_i$, where $\mu_e$ = 0) is more similar to the population distribution. The sample distribution with error ($Y_i$, $\mu_e$ = 1) shows a wider distribution, indicating that the variance is much higher than the populations.
+
+The the following sample distribution comparison, we can see that $Y_i$ is both skewed and exhibits larger variance than the sample distribution where $\mu_e$ = 0. When $\mu_e$ is zero, we can say the estimator $Y_i$ is unbiased. 
+
+```{r}
+df_long <- as_tibble(df_sample)
+
+df_long <- df_long %>% select(Samples, Y_i) %>% gather(source, values, Samples:Y_i)
+
+ggplot(data = df_long) + 
+           geom_density(alpha = 0.6, aes(fill = source, x = values)) +
+           ggtitle(label = expression(X[i])) + xlab("") + ylab("") + xlim(-5, 8) + ylim(0, 0.4) +
+           scale_fill_manual( values = chart_colors[c(1,5)])
+```
