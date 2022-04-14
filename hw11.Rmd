@@ -196,5 +196,18 @@ str(df_data)
 hist(df_data$DURATION, breaks = 12)
 hist(df_data$INTERVAL, breaks = 15)
 
+ggplot(data = df_data, aes(df_data$INTERVAL)) + 
+geom_density(fill = "blue", alpha = 0.5) +
+xlim(35, 105)
+
+ggplot(data = df_data) + 
+geom_density(aes(df_data$DURATION), fill = "red", alpha = 0.5) + 
+xlim(0, 6)
+
+plot(x = df_data$INTERVAL, y = df_data$DURATION)
+abline(lm(df_data$DURATION ~ df_data$INTERVAL))
+
+df_data %>% group_by(DAY) %>% summarise(int_avg = mean(INTERVAL), dur_avg = mean(DURATION), cnt = length(DAY))
+
 ```
 
